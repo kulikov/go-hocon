@@ -1,6 +1,7 @@
 package hocon
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,6 +32,18 @@ type Config struct {
 
 // String method returns the string representation of the Config object
 func (c *Config) String() string { return c.root.String() }
+
+func (c *Config) Json() string {
+	js := make(map[string]interface{})
+
+	err := json.Unmarshal([]byte(c.root.Json()), &js)
+	if err != nil {
+		panic(fmt.Sprintf("Error on parsing json: %s", err))
+	}
+
+	out, _ := json.Marshal(js)
+	return string(out)
+}
 
 // GetRoot method returns the root value of the configuration
 func (c *Config) GetRoot() Value {
@@ -276,6 +289,7 @@ func (c *Config) WithFallback(fallback *Config) *Config {
 type Value interface {
 	Type() Type
 	String() string
+	Json() string
 	isConcatenable() bool
 }
 
@@ -293,6 +307,11 @@ func (s String) String() string {
 	return str
 }
 
+func (s String) Json() string {
+	str, _ := json.Marshal(s)
+	return string(str)
+}
+
 func (s String) isConcatenable() bool { return true }
 
 // valueWithAlternative represents a value with Substitution which might override the original value
@@ -305,6 +324,11 @@ func (s *valueWithAlternative) Type() Type { return valueWithAlternativeType }
 
 func (s *valueWithAlternative) String() string {
 	return fmt.Sprintf("(%s | %s)", s.value, s.alternative.String())
+}
+
+func (s *valueWithAlternative) Json() string {
+	str, _ := json.Marshal(s.String())
+	return string(str)
 }
 
 func (s *valueWithAlternative) isConcatenable() bool { return false }
@@ -333,6 +357,36 @@ func (o Object) String() string {
 			builder.WriteString(value.String())
 		} else {
 			builder.WriteString("")
+		}
+
+		if i < itemsSize {
+			builder.WriteString(", ")
+		}
+		i++
+	}
+
+	builder.WriteString(objectEndToken)
+
+	return builder.String()
+}
+
+func (o Object) Json() string {
+	var builder strings.Builder
+
+	itemsSize := len(o)
+	i := 1
+
+	builder.WriteString(objectStartToken)
+
+	for key, value := range o {
+		str, _ := json.Marshal(key)
+		builder.WriteString(string(str))
+		builder.WriteString(colonToken)
+
+		if value != nil {
+			builder.WriteString(value.Json())
+		} else {
+			builder.WriteString(string(null))
 		}
 
 		if i < itemsSize {
@@ -413,12 +467,33 @@ func (a Array) String() string {
 	return builder.String()
 }
 
+func (a Array) Json() string {
+	if len(a) == 0 {
+		return "[]"
+	}
+
+	var builder strings.Builder
+
+	builder.WriteString(arrayStartToken)
+	builder.WriteString(a[0].Json())
+
+	for _, value := range a[1:] {
+		builder.WriteString(commaToken)
+		builder.WriteString(value.Json())
+	}
+
+	builder.WriteString(arrayEndToken)
+
+	return builder.String()
+}
+
 // Int represents an Integer value
 type Int int
 
 // Type Number
 func (i Int) Type() Type           { return NumberType }
 func (i Int) String() string       { return strconv.Itoa(int(i)) }
+func (i Int) Json() string         { return i.String() }
 func (i Int) isConcatenable() bool { return true }
 
 // Float32 represents a Float32 value
@@ -427,6 +502,7 @@ type Float32 float32
 // Type Number
 func (f Float32) Type() Type           { return NumberType }
 func (f Float32) String() string       { return strconv.FormatFloat(float64(f), 'e', -1, 32) }
+func (f Float32) Json() string         { return fmt.Sprintf(`"%s"`, f.String()) }
 func (f Float32) isConcatenable() bool { return false }
 
 // Float64 represents a Float64 value
@@ -435,6 +511,7 @@ type Float64 float64
 // Type Number
 func (f Float64) Type() Type           { return NumberType }
 func (f Float64) String() string       { return strconv.FormatFloat(float64(f), 'e', -1, 64) }
+func (f Float64) Json() string         { return fmt.Sprintf(`"%s"`, f.String()) }
 func (f Float64) isConcatenable() bool { return false }
 
 // Boolean represents bool value
@@ -454,6 +531,7 @@ func newBooleanFromString(value string) Boolean {
 // Type Boolean
 func (b Boolean) Type() Type           { return BooleanType }
 func (b Boolean) String() string       { return strconv.FormatBool(bool(b)) }
+func (b Boolean) Json() string         { return b.String() }
 func (b Boolean) isConcatenable() bool { return true }
 
 // Substitution refers to another value in the configuration tree
@@ -482,6 +560,11 @@ func (s *Substitution) String() string {
 	return builder.String()
 }
 
+func (s *Substitution) Json() string {
+	str, _ := json.Marshal(s.String())
+	return string(str)
+}
+
 // Null represents a null value
 type Null string
 
@@ -490,6 +573,7 @@ const null Null = "null"
 // Type Null
 func (n Null) Type() Type           { return NullType }
 func (n Null) String() string       { return string(null) }
+func (n Null) Json() string         { return string(null) }
 func (n Null) isConcatenable() bool { return true }
 
 // Duration represents a duration value
@@ -498,6 +582,7 @@ type Duration time.Duration
 // Type Duration
 func (d Duration) Type() Type           { return StringType }
 func (d Duration) String() string       { return time.Duration(d).String() }
+func (d Duration) Json() string         { return fmt.Sprintf(`%d`, time.Duration(d).Milliseconds()) }
 func (d Duration) isConcatenable() bool { return false }
 
 type concatenation Array
@@ -523,4 +608,9 @@ func (c concatenation) String() string {
 	}
 
 	return builder.String()
+}
+
+func (c concatenation) Json() string {
+	str, _ := json.Marshal(c.String())
+	return string(str)
 }
