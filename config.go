@@ -328,7 +328,12 @@ func (o Object) String() string {
 	for key, value := range o {
 		builder.WriteString(key)
 		builder.WriteString(colonToken)
-		builder.WriteString(value.String())
+
+		if value != nil {
+			builder.WriteString(value.String())
+		} else {
+			builder.WriteString("")
+		}
 
 		if i < itemsSize {
 			builder.WriteString(", ")
@@ -501,7 +506,7 @@ func (c concatenation) Type() Type           { return ConcatenationType }
 func (c concatenation) isConcatenable() bool { return true }
 func (c concatenation) containsObject() bool {
 	for _, value := range c {
-		if value.Type() == ObjectType {
+		if value != nil && value.Type() == ObjectType {
 			return true
 		}
 	}
@@ -512,7 +517,9 @@ func (c concatenation) String() string {
 	var builder strings.Builder
 
 	for _, value := range c {
-		builder.WriteString(value.String())
+		if value != nil {
+			builder.WriteString(value.String())
+		}
 	}
 
 	return builder.String()
