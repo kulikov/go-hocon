@@ -3,6 +3,7 @@ package hocon
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -301,7 +302,12 @@ func (s String) Type() Type { return StringType }
 
 func (s String) String() string {
 	str := strings.Trim(string(s), `"`)
-	if strings.Contains(string(s), ":") {
+	if str == "" {
+		return `""`
+	}
+	compile := regexp.MustCompile("[ !\\\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]+")
+
+	if compile.MatchString(str) {
 		return fmt.Sprintf(`"%s"`, str)
 	}
 	return str
