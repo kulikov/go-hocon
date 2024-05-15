@@ -594,6 +594,14 @@ func TestExtractObject(t *testing.T) {
 		assertNoError(t, err)
 		assertDeepEqual(t, got, expected)
 	})
+
+	t.Run("should parse properly when the path expression key ends with a number", func(t *testing.T) {
+		parser := newParser(strings.NewReader(`a.100:[1,2]`))
+		parser.advance()
+		got, err := parser.extractObject()
+		assertNoError(t, err)
+		assertDeepEqual(t, got, Object{"a": Object{"100": Array{Int(1), Int(2)}}})
+	})
 }
 
 func TestMergeObjects(t *testing.T) {
@@ -1180,8 +1188,21 @@ func TestExtractArray(t *testing.T) {
 		assertDeepEqual(t, got, Array{Int(1)})
 	})
 
-	t.Run("extract the array without an error if if elements are separated with ASCII newline", func(t *testing.T) {
+	t.Run("extract the array without an error if elements are separated with ASCII newline", func(t *testing.T) {
 		parser := newParser(strings.NewReader("[1\n2]"))
+		parser.advance()
+		got, err := parser.extractArray()
+		assertNoError(t, err)
+		assertDeepEqual(t, got, Array{Int(1), Int(2)})
+	})
+
+	t.Run("extract the array without an error if a line ends with a comment starting with the '#' character", func(t *testing.T) {
+		parser := newParser(strings.NewReader(`
+		[
+			1,
+			2 # this is a comment
+		]
+        `))
 		parser.advance()
 		got, err := parser.extractArray()
 		assertNoError(t, err)
