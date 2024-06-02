@@ -1495,6 +1495,26 @@ func TestExtractSubstitution(t *testing.T) {
 		assertDeepEqual(t, substitution, expected)
 	})
 
+	t.Run("parse and return concatenated string", func(t *testing.T) {
+		parser := newParser(strings.NewReader(`
+			a = test
+			b = "new"
+			c = ${a}plus${b}
+			
+			inner {
+				d = ${b}and${c}
+				e = ${c}and${?inner.undefined}
+			}
+		`))
+		conf, err := parser.parse()
+
+		assertNoError(t, err)
+		assertEquals(t, conf.GetString("a"), "test")
+		assertEquals(t, conf.GetString("b"), "new")
+		assertEquals(t, conf.GetString("inner.d"), "newandtestplusnew")
+		assertEquals(t, conf.GetString("inner.e"), "testplusnewand")
+	})
+
 	for forbiddenChar := range forbiddenCharacters {
 		t.Run(fmt.Sprintf("return error for the forbidden character: %q", forbiddenChar), func(t *testing.T) {
 			if forbiddenChar != "`" && forbiddenChar != `"` && forbiddenChar != "}" && forbiddenChar != "#" {

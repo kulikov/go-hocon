@@ -608,7 +608,7 @@ func (c concatenation) String() string {
 	var builder strings.Builder
 
 	for _, value := range c {
-		if value != nil {
+		if value != nil && value.String() != `""` {
 			builder.WriteString(value.String())
 		}
 	}
