@@ -1497,22 +1497,46 @@ func TestExtractSubstitution(t *testing.T) {
 
 	t.Run("parse and return concatenated string", func(t *testing.T) {
 		parser := newParser(strings.NewReader(`
-			a = test
+			a = "test me"
 			b = "new"
 			c = ${a}plus${b}
 			
 			inner {
 				d = ${b}and${c}
 				e = ${c}and${?inner.undefined}
+				quoted = ${a}"and"${inner.d}
+			}
+
+			config {
+			  name = "App Live"
+			
+			  key = "item1"
+			  timeout = 1000
+			
+			  amount = 100.0000000012345
+			
+			  super = ${config.name}"and"${config.key}
+			
+			  connection {
+				host = "localhost"
+				new-name = ${config.connection.host}"-suffix-"${config.timeout}
+			  }
 			}
 		`))
+		
 		conf, err := parser.parse()
 
 		assertNoError(t, err)
-		assertEquals(t, conf.GetString("a"), "test")
+		assertEquals(t, conf.GetString("a"), "test me")
 		assertEquals(t, conf.GetString("b"), "new")
-		assertEquals(t, conf.GetString("inner.d"), "newandtestplusnew")
-		assertEquals(t, conf.GetString("inner.e"), "testplusnewand")
+		assertEquals(t, conf.GetString("inner.d"), "newandtest meplusnew")
+		assertEquals(t, conf.GetString("inner.e"), "test meplusnewand")
+		assertEquals(t, conf.GetString("inner.quoted"), "test meandnewandtest meplusnew")
+
+		assertEquals(t, conf.GetString("config.connection.host"), "localhost")
+		assertEquals(t, conf.GetString("config.connection.new-name"), "localhost-suffix-1000")
+		assertEquals(t, conf.GetString("config.name"), "App Live")
+		assertEquals(t, conf.GetFloat64("config.amount"), 100.0000000012345)
 	})
 
 	for forbiddenChar := range forbiddenCharacters {

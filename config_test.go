@@ -354,30 +354,30 @@ func TestObject_String(t *testing.T) {
 
 	t.Run("return the string of an object that contains a empty string", func(t *testing.T) {
 		got := Object{"a": String("")}.String()
-		assertEquals(t, got, "{a:\"\"}")
+		assertEquals(t, got, `{"a":""}`)
 	})
 
 	t.Run("return the string of an object that contains a single element", func(t *testing.T) {
 		got := Object{"a": Int(1)}.String()
-		assertEquals(t, got, "{a:1}")
+		assertEquals(t, got, `{"a":1}`)
 	})
 
 	t.Run("return the string of an object that contains multiple elements", func(t *testing.T) {
 		got := Object{"a": Int(1), "b": Int(2)}.String()
-		if got != "{a:1, b:2}" && got != "{b:2, a:1}" {
-			fail(t, got, "{a:1, b:2}")
+		if got != `{"a":1, "b":2}` && got != `{"b":2, "a":1}` {
+			fail(t, got, `{"a":1, "b":2}`)
 		}
 	})
 
 	t.Run("return the string of an object that contains a single element with the forbidden characters", func(t *testing.T) {
 		got := Object{"a": String("!@#$%^&*()_+{}[];:',./<>?\"\\")}.String()
-		assertEquals(t, got, "{a:\"!@#$%^&*()_+{}[];:',./<>?\"\\\"}")
+		assertEquals(t, got, `{"a":"!@#$%^&*()_+{}[];:',./<>?\"\\"}`)
 	})
 
 	t.Run("return the string of an object that contains multiple elements with the forbidden characters", func(t *testing.T) {
 		got := Object{"a": String("!@#$%^&*()_+{}[];:',./<>?\"\\"), "b": Int(2)}.String()
-		if got != "{a:\"!@#$%^&*()_+{}[];:',./<>?\"\\\", b:2}" && got != "{b:2, a:\"!@#$%^&*()_+{}[];:',./<>?\"}" {
-			fail(t, got, "{a:\"!@#$%^&*()_+{}[];:',./<>?\"\\\", b:2}")
+		if got != `{"a":"!@#$%^&*()_+{}[];:',./<>?\"\\", "b":2}` && got != `{"b":2, "a":"!@#$%^&*()_+{}[];:',./<>?\"\\"}` {
+			fail(t, got, `{a:"!@#$%^&*()_+{}[];:',./<>?\"\\", "b":2}`)
 		}
 	})
 }
@@ -405,12 +405,12 @@ func TestArray_String(t *testing.T) {
 
 	t.Run("return the string of an array that contains a single elements with the ':' character", func(t *testing.T) {
 		got := Array{String("!@#$%^&*()_+{}[];:',./<>?\"\\")}.String()
-		assertEquals(t, got, "[\"!@#$%^&*()_+{}[];:',./<>?\"\\\"]")
+		assertEquals(t, got, `["!@#$%^&*()_+{}[];:',./<>?\"\\"]`)
 	})
 
 	t.Run("return the string of an array that contains multiple elements with the ':' character", func(t *testing.T) {
 		got := Array{String("!@#$%^&*()_+"), String("{}[]|;':\",./<>?\\")}.String()
-		assertEquals(t, got, "[\"!@#$%^&*()_+\",\"{}[]|;':\",./<>?\\\"]")
+		assertEquals(t, got, `["!@#$%^&*()_+","{}[]|;':\",./<>?\\"]`)
 	})
 }
 

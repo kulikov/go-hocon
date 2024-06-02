@@ -1,9 +1,9 @@
 package hocon
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -42,8 +42,7 @@ func (c *Config) Json() string {
 		panic(fmt.Sprintf("Error on parsing json: %s", err))
 	}
 
-	out, _ := json.Marshal(js)
-	return string(out)
+	return jsonMarshal(js)
 }
 
 // GetRoot method returns the root value of the configuration
@@ -301,21 +300,11 @@ type String string
 func (s String) Type() Type { return StringType }
 
 func (s String) String() string {
-	str := strings.Trim(string(s), `"`)
-	if str == "" {
-		return `""`
-	}
-	compile := regexp.MustCompile("[ !\\\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~]+")
-
-	if compile.MatchString(str) {
-		return fmt.Sprintf(`"%s"`, str)
-	}
-	return str
+	return string(s)
 }
 
 func (s String) Json() string {
-	str, _ := json.Marshal(s)
-	return string(str)
+	return jsonMarshal(s)
 }
 
 func (s String) isConcatenable() bool { return true }
@@ -333,8 +322,7 @@ func (s *valueWithAlternative) String() string {
 }
 
 func (s *valueWithAlternative) Json() string {
-	str, _ := json.Marshal(s.String())
-	return string(str)
+	return jsonMarshal(s.String())
 }
 
 func (s *valueWithAlternative) isConcatenable() bool { return false }
@@ -348,32 +336,7 @@ func (o Object) isConcatenable() bool { return false }
 
 // String method returns the string representation of the Object
 func (o Object) String() string {
-	var builder strings.Builder
-
-	itemsSize := len(o)
-	i := 1
-
-	builder.WriteString(objectStartToken)
-
-	for key, value := range o {
-		builder.WriteString(key)
-		builder.WriteString(colonToken)
-
-		if value != nil {
-			builder.WriteString(value.String())
-		} else {
-			builder.WriteString("")
-		}
-
-		if i < itemsSize {
-			builder.WriteString(", ")
-		}
-		i++
-	}
-
-	builder.WriteString(objectEndToken)
-
-	return builder.String()
+	return o.Json()
 }
 
 func (o Object) Json() string {
@@ -385,8 +348,7 @@ func (o Object) Json() string {
 	builder.WriteString(objectStartToken)
 
 	for key, value := range o {
-		str, _ := json.Marshal(key)
-		builder.WriteString(string(str))
+		builder.WriteString(jsonMarshal(key))
 		builder.WriteString(colonToken)
 
 		if value != nil {
@@ -454,23 +416,7 @@ func (a Array) isConcatenable() bool { return false }
 
 // String method returns the string representation of the Array
 func (a Array) String() string {
-	if len(a) == 0 {
-		return "[]"
-	}
-
-	var builder strings.Builder
-
-	builder.WriteString(arrayStartToken)
-	builder.WriteString(a[0].String())
-
-	for _, value := range a[1:] {
-		builder.WriteString(commaToken)
-		builder.WriteString(value.String())
-	}
-
-	builder.WriteString(arrayEndToken)
-
-	return builder.String()
+	return a.Json()
 }
 
 func (a Array) Json() string {
@@ -567,8 +513,7 @@ func (s *Substitution) String() string {
 }
 
 func (s *Substitution) Json() string {
-	str, _ := json.Marshal(s.String())
-	return string(str)
+	return jsonMarshal(s.String())
 }
 
 // Null represents a null value
@@ -608,8 +553,8 @@ func (c concatenation) String() string {
 	var builder strings.Builder
 
 	for _, value := range c {
-		if value != nil && value.String() != `""` {
-			builder.WriteString(value.String())
+		if value != nil {
+			builder.WriteString(strings.Trim(value.String(), `"`))
 		}
 	}
 
@@ -617,6 +562,14 @@ func (c concatenation) String() string {
 }
 
 func (c concatenation) Json() string {
-	str, _ := json.Marshal(c.String())
-	return string(str)
+	return jsonMarshal(c.String())
+}
+
+func jsonMarshal(v interface{}) string {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "")
+	_ = encoder.Encode(v)
+	return strings.TrimSpace(buffer.String())
 }
