@@ -154,6 +154,21 @@ func TestGetString(t *testing.T) {
 	})
 }
 
+func TestGetStringOrPanic(t *testing.T) {
+	config := &Config{Object{"a": String("b"), "c": Int(2)}}
+
+	t.Run("get string", func(t *testing.T) {
+		got := config.GetStringOrPanic("a")
+		assertEquals(t, got, "b")
+	})
+
+	t.Run("panic for non-existing string", func(t *testing.T) {
+		assertPanic(t, func() {
+			config.GetStringOrPanic("d")
+		}, "config value not found at path: d")
+	})
+}
+
 func TestGetInt(t *testing.T) {
 	config := &Config{Object{"a": String("aa"), "b": String("3"), "c": Int(2), "d": Array{Int(5)}}}
 
@@ -454,19 +469,19 @@ func TestArray_String(t *testing.T) {
 func TestGet(t *testing.T) {
 	t.Run("return nil if the root of config is not an Object", func(t *testing.T) {
 		config := &Config{Array{Int(1)}}
-		got := config.Get("a")
+		got := config.get("a")
 		assertNil(t, got)
 	})
 
 	t.Run("find the value if the root of config is an object and a value exist with the given path", func(t *testing.T) {
 		config := &Config{Object{"a": Int(1)}}
-		got := config.Get("a")
+		got := config.get("a")
 		assertEquals(t, got, Int(1))
 	})
 
 	t.Run("return nil if the root of config is an object but value with the given path does not exist", func(t *testing.T) {
 		config := &Config{Object{"a": Int(1)}}
-		got := config.Get("b")
+		got := config.get("b")
 		assertNil(t, got)
 	})
 }

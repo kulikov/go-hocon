@@ -1512,6 +1512,8 @@ func TestExtractSubstitution(t *testing.T) {
 			
 			  key = "item1"
 			  timeout = 1000
+
+			  int-array = [1, "23", 4]
 			
 			  amount = 100.0000000012345
 			
@@ -1527,16 +1529,19 @@ func TestExtractSubstitution(t *testing.T) {
 		conf, err := parser.parse()
 
 		assertNoError(t, err)
-		assertEquals(t, conf.Get("a"), String("test me"))
-		assertEquals(t, conf.Get("b"), String("new"))
-		assertEquals(t, conf.Get("inner.d").String(), "newandtest meplusnew")
-		assertEquals(t, conf.Get("inner.e").String(), "test meplusnewand")
-		assertEquals(t, conf.Get("inner.quoted").String(), "test meandnewandtest meplusnew")
+		assertEquals(t, conf.get("a"), String("test me"))
+		assertEquals(t, conf.get("b"), String("new"))
+		assertEquals(t, conf.get("inner.d").String(), "newandtest meplusnew")
+		assertEquals(t, conf.get("inner.e").String(), "test meplusnewand")
+		assertEquals(t, conf.get("inner.quoted").String(), "test meandnewandtest meplusnew")
 
-		assertEquals(t, conf.Get("config.connection.host"), String("localhost"))
-		assertEquals(t, conf.Get("config.connection.new-name").String(), "localhost-suffix-1000")
-		assertEquals(t, conf.Get("config.name"), String("App Live"))
-		assertEquals(t, conf.Get("config.amount"), Float64(100.0000000012345))
+		assertEquals(t, conf.get("config.connection.host"), String("localhost"))
+		assertEquals(t, conf.get("config.connection.new-name").String(), "localhost-suffix-1000")
+		assertEquals(t, conf.get("config.name"), String("App Live"))
+		assertEquals(t, conf.get("config.amount"), Float64(100.0000000012345))
+
+		ints, _ := conf.GetIntSlice("config.int-array")
+		assertDeepEqual(t, ints, []int{1, 23, 4})
 	})
 
 	for forbiddenChar := range forbiddenCharacters {

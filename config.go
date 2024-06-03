@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Type of an hocon Value
+// Type of hocon Value
 type Type int
 
 // Type constants
@@ -52,7 +52,7 @@ func (c *Config) GetRoot() Value {
 
 // GetObject method finds the value at the given path and returns it as an Object, returns nil if the value is not found
 func (c *Config) GetObject(path string) (Object, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return nil, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -75,16 +75,34 @@ func (c *Config) GetConfig(path string) (*Config, error) {
 	return value.ToConfig(), nil
 }
 
+func (c *Config) GetConfigOrPanic(path string) *Config {
+	value, err := c.GetConfig(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetStringMap method finds the value at the given path and returns it as a map[string]Value
 // returns nil if the value is not found
 func (c *Config) GetStringMap(path string) (map[string]Value, error) {
 	return c.GetObject(path)
 }
 
+func (c *Config) GetStringMapOrPanic(path string) map[string]Value {
+	value, err := c.GetStringMap(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetStringMapString method finds the value at the given path and returns it as a map[string]string
 // returns nil if the value is not found
 func (c *Config) GetStringMapString(path string) (map[string]string, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return nil, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -102,9 +120,18 @@ func (c *Config) GetStringMapString(path string) (map[string]string, error) {
 	return m, nil
 }
 
+func (c *Config) GetStringMapStringOrPanic(path string) map[string]string {
+	value, err := c.GetStringMapString(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetArray method finds the value at the given path and returns it as an Array, returns nil if the value is not found
 func (c *Config) GetArray(path string) (Array, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return nil, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -117,9 +144,18 @@ func (c *Config) GetArray(path string) (Array, error) {
 	return val, nil
 }
 
+func (c *Config) GetArrayOrPanic(path string) Array {
+	value, err := c.GetArray(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetIntSlice method finds the value at the given path and returns it as []int, returns nil if the value is not found
 func (c *Config) GetIntSlice(path string) ([]int, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return nil, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -131,21 +167,30 @@ func (c *Config) GetIntSlice(path string) ([]int, error) {
 
 	slice := make([]int, 0, len(arr))
 	for _, v := range arr {
-		i, ok := v.(Int)
-		if !ok {
+		i, err := strconv.Atoi(v.String())
+		if err != nil {
 			return nil, fmt.Errorf("config value at path: %s is not an array of integers", path)
 		}
 
-		slice = append(slice, int(i))
+		slice = append(slice, i)
 	}
 
 	return slice, nil
 }
 
+func (c *Config) GetIntSliceOrPanic(path string) []int {
+	value, err := c.GetIntSlice(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetStringSlice method finds the value at the given path and returns it as []string
 // returns nil if the value is not found
 func (c *Config) GetStringSlice(path string) ([]string, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return nil, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -164,10 +209,19 @@ func (c *Config) GetStringSlice(path string) ([]string, error) {
 	return slice, nil
 }
 
+func (c *Config) GetStringSliceOrPanic(path string) []string {
+	value, err := c.GetStringSlice(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetString method finds the value at the given path and returns it as a String
 // returns empty string if the value is not found
 func (c *Config) GetString(path string) (string, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return "", fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -175,9 +229,18 @@ func (c *Config) GetString(path string) (string, error) {
 	return value.String(), nil
 }
 
+func (c *Config) GetStringOrPanic(path string) string {
+	value, err := c.GetString(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetInt method finds the value at the given path and returns it as an Int, returns zero if the value is not found
 func (c *Config) GetInt(path string) (int, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return 0, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -196,10 +259,19 @@ func (c *Config) GetInt(path string) (int, error) {
 	}
 }
 
+func (c *Config) GetIntOrPanic(path string) int {
+	value, err := c.GetInt(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetFloat32 method finds the value at the given path and returns it as a Float32
 // returns float32(0.0) if the value is not found
 func (c *Config) GetFloat32(path string) (float32, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return float32(0.0), fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -220,10 +292,19 @@ func (c *Config) GetFloat32(path string) (float32, error) {
 	}
 }
 
+func (c *Config) GetFloat32OrPanic(path string) float32 {
+	value, err := c.GetFloat32(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetFloat64 method finds the value at the given path and returns it as a Float64
 // returns 0.0 if the value is not found
 func (c *Config) GetFloat64(path string) (float64, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return 0.0, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -245,10 +326,19 @@ func (c *Config) GetFloat64(path string) (float64, error) {
 	}
 }
 
+func (c *Config) GetFloat64OrPanic(path string) float64 {
+	value, err := c.GetFloat64(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetBoolean method finds the value at the given path and returns it as a Boolean
 // returns false if the value is not found
 func (c *Config) GetBoolean(path string) (bool, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return false, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -270,10 +360,19 @@ func (c *Config) GetBoolean(path string) (bool, error) {
 	}
 }
 
+func (c *Config) GetBooleanOrPanic(path string) bool {
+	value, err := c.GetBoolean(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
 // GetDuration method finds the value at the given path and returns it as a time.Duration
 // returns 0 if the value is not found
 func (c *Config) GetDuration(path string) (time.Duration, error) {
-	value := c.Get(path)
+	value := c.get(path)
 	if value == nil {
 		return 0, fmt.Errorf("config value not found at path: %s", path)
 	}
@@ -286,9 +385,22 @@ func (c *Config) GetDuration(path string) (time.Duration, error) {
 	return time.Duration(dur), nil
 }
 
-// Get method finds the value at the given path and returns it without casting to any type
+func (c *Config) GetDurationOrPanic(path string) time.Duration {
+	value, err := c.GetDuration(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
+}
+
+func (c *Config) Has(path string) bool {
+	return c.get(path) != nil
+}
+
+// get method finds the value at the given path and returns it without casting to any type
 // returns nil if the value is not found
-func (c *Config) Get(path string) Value {
+func (c *Config) get(path string) Value {
 	if c.root.Type() != ObjectType {
 		return nil
 	}
