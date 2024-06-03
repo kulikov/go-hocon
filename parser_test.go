@@ -1523,20 +1523,20 @@ func TestExtractSubstitution(t *testing.T) {
 			  }
 			}
 		`))
-		
+
 		conf, err := parser.parse()
 
 		assertNoError(t, err)
-		assertEquals(t, conf.GetString("a"), "test me")
-		assertEquals(t, conf.GetString("b"), "new")
-		assertEquals(t, conf.GetString("inner.d"), "newandtest meplusnew")
-		assertEquals(t, conf.GetString("inner.e"), "test meplusnewand")
-		assertEquals(t, conf.GetString("inner.quoted"), "test meandnewandtest meplusnew")
+		assertEquals(t, conf.Get("a"), String("test me"))
+		assertEquals(t, conf.Get("b"), String("new"))
+		assertEquals(t, conf.Get("inner.d").String(), "newandtest meplusnew")
+		assertEquals(t, conf.Get("inner.e").String(), "test meplusnewand")
+		assertEquals(t, conf.Get("inner.quoted").String(), "test meandnewandtest meplusnew")
 
-		assertEquals(t, conf.GetString("config.connection.host"), "localhost")
-		assertEquals(t, conf.GetString("config.connection.new-name"), "localhost-suffix-1000")
-		assertEquals(t, conf.GetString("config.name"), "App Live")
-		assertEquals(t, conf.GetFloat64("config.amount"), 100.0000000012345)
+		assertEquals(t, conf.Get("config.connection.host"), String("localhost"))
+		assertEquals(t, conf.Get("config.connection.new-name").String(), "localhost-suffix-1000")
+		assertEquals(t, conf.Get("config.name"), String("App Live"))
+		assertEquals(t, conf.Get("config.amount"), Float64(100.0000000012345))
 	})
 
 	for forbiddenChar := range forbiddenCharacters {

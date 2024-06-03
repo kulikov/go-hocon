@@ -723,7 +723,7 @@ func (p *parser) extractValue() (Value, error) {
 			return null, nil
 		case isBooleanString(token):
 			p.advance()
-			return newBooleanFromString(token), nil
+			return newBooleanFromString(token)
 		case isUnquotedString(token):
 			p.advance()
 			return String(token), nil
